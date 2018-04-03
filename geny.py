@@ -43,7 +43,7 @@ def generate_possible_chromosoms_BIG(D, numberOfPossibleGens ):
 
     chromosoms=[]
 
-    for i in range(100):
+    for i in range(1000):
         random_chromosom = []
         for j in range(D):
             random_chromosom.append(random.randint(0, numberOfPossibleGens[j]-1))
@@ -75,7 +75,7 @@ def generate_list_of_possible_chromosoms(D, numberOfPossibleGens, possibleGens):
 
     return tableOfChromosom
 
-def minimize_function(E, tableOfChromosom,P, links ):
+def minimize_function(E, tableOfChromosom,P, links,D ):
 
     f_x = []
     for chrom in tableOfChromosom:
@@ -93,12 +93,19 @@ def minimize_function(E, tableOfChromosom,P, links ):
 
             link_loads.append(ll)
 
-        y_e = []
+        l_e_x = []
         for i in range(len(link_loads)):
-            y_e.append(math.floor(link_loads[i]/2))
-        #y_e_x = sum(y_e)
-        f_x.append( max( 0, sum(y_e) - links[0][2]*links[0][4]))
+            l_e_x.append(max(0, link_loads[i] - links[0][2]*links[0][4]))
+
+        f_x.append(l_e_x)
 
     return f_x
 
 
+def suma_elementow_listy(minimize_f_x):
+
+    sum_minimize_f_x =[]
+    for i in minimize_f_x:
+        sum_minimize_f_x.append(sum(i))
+
+    return sum_minimize_f_x

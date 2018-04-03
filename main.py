@@ -1,6 +1,7 @@
 from random import randint
 from geny import*
-import math
+from Evolution import *
+import heapq
 
 import itertools
 
@@ -59,17 +60,29 @@ for i in range(D):
 tableOfChromosoms= generate_list_of_possible_chromosoms(D, numberOfPossibleGens, possibleGens)
 
 #liczenie wartości funkcji f(x)
-minimize_f_x = minimize_function(E, tableOfChromosoms, P, links)
-print(minimize_f_x)
+minimize_f_x = minimize_function(E, tableOfChromosoms, P, links, D)
+
+#sumuje wartości, żeby znależć najlepsze rozwiązanie
+sum_minimize_f_x =suma_elementow_listy(minimize_f_x)
+print(sum_minimize_f_x)
+print(min(sum_minimize_f_x))
+'''
+if min(sum_minimize_f_x) == 0:
+    print("Znaleziono rozwiąznie optymalne:")
+    print(tableOfChromosoms[sum_minimize_f_x.index(min(sum_minimize_f_x))])
+'''
 
 #Mutacja
 
-#Wybieram 10 najmniejszych tablic
-tableOfChromosomsMutatioan = []
-for i in range(10):
-    min_chromosom = min(minimize_f_x)
-    tableOfChromosomsMutatioan.append(tableOfChromosoms[minimize_f_x.index(min_chromosom)])
+P_mutacji = 0.1
+evolution = Evolution()
 
-#for i in range(0,10, 2):
+#Populacja początkowa (sum_minimize_f_x)
+tableOfChromosomsMutation = evolution.initial_population(sum_minimize_f_x, tableOfChromosoms)
 
+print(tableOfChromosomsMutation)
 
+best_solution_cost, best_solution_chromosom = evolution.mutation(tableOfChromosomsMutation, D, E, P, links)
+
+print(best_solution_cost)
+print(best_solution_chromosom)
