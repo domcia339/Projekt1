@@ -1,88 +1,66 @@
-from random import randint
-from geny import*
+from DAP_problem import*
 from Evolution import *
-import heapq
+from Data import *
 
-import itertools
+data = Data()
 
-## usunięcie putych linijek z pliku
-with open('dane_duze.txt', 'r+') as file:
-    with open('dane2.txt', 'w+') as file2:
-        for line in file:
-            if not line.isspace():
-                file2.write(line)
+#Generacja możliwych genów na podstawie funkcji z pliku DAP_problem.py
+possibleGens = generate_list_of_gens_for_all_demands(data.D, data.m_d, data.h_d)
 
-## Otwieram plik
-f = open('dane2.txt', 'r')
-
-#Wczytuje liczbe krawedzi E
-E = int(f.readline())
-#print(E)
-
-links = []
-# Wczutuj tablice kwawędzi do tablicy dwuwymiarowej
-for i in range(E):
-    ee = [int(i) for i in f.readline().split()]
-    links.append(ee)
-
-# Wczytuje liczbe zapotrzebowań
-D = int(f.readline())
-if D <= 0:
-    D = int(f.readline())
-
-#Generuje puste tablice o odpowiedniej długości
-d = [0]*D
-p = [0]*D
-h_d = [0]*D
-m_d = [0]*D
-P = []
-# Generuje słownik sciezek
-for i in range(D):
-    d[i], p[i], h_d[i] = [int(a) for a in f.readline().strip().split(' ')]
-    m_d[i] = int(f.readline())
-    a=[]
-    for j in range(m_d[i]):
-        x = [int(a) for a in f.readline().strip().split(' ')]
-        ##P['P('+str(i+1)+','+str(j+1)+')'] = x[1:]
-        a.append(x[1:])
-    P.append(a)
-
-
-#Generacja możliwych genów na podstawie funkcji z pliku geny.py
-possibleGens = generate_list_of_gens_for_all_demands(D, m_d, h_d)
-
-numberOfPossibleGens=[]
-for i in range(D):
+numberOfPossibleGens = []
+for i in range(data.D):
     numberOfPossibleGens.append(len(possibleGens[i]))
 
 #generacja możliwości ułożenia genów w chromosomie
-
-tableOfChromosoms= generate_list_of_possible_chromosoms(D, numberOfPossibleGens, possibleGens)
+tableOfChromosoms= generate_list_of_possible_chromosoms(data.D, numberOfPossibleGens, possibleGens)
 
 #liczenie wartości funkcji f(x)
-minimize_f_x = minimize_function(E, tableOfChromosoms, P, links, D)
+minimize_f_x = minimize_function(data.E, tableOfChromosoms, data.P, data.links, data.D)
 
 #sumuje wartości, żeby znależć najlepsze rozwiązanie
 sum_minimize_f_x =suma_elementow_listy(minimize_f_x)
-print(sum_minimize_f_x)
-print(min(sum_minimize_f_x))
-'''
-if min(sum_minimize_f_x) == 0:
-    print("Znaleziono rozwiąznie optymalne:")
+najmniejsze_rozwiązanie_z_populacji = min(sum_minimize_f_x)
+print(najmniejsze_rozwiązanie_z_populacji)
+
+if najmniejsze_rozwiązanie_z_populacji == 0:
+    print("Znaleziono rozwiąznie optymalne, dla zbioru małego z wykorzystaniem metody Brute Force:")
     print(tableOfChromosoms[sum_minimize_f_x.index(min(sum_minimize_f_x))])
-'''
+else:
+    nowe_najmniejsze_rozwiązanie = 1000
 
-#Mutacja
+    while najmniejsze_rozwiązanie_z_populacji < nowe_najmniejsze_rozwiązanie:
+        #Mutacja
+        x = []
+        evolution = Evolution()
 
-P_mutacji = 0.1
-evolution = Evolution()
+        #Populacja początkowa (sum_minimize_f_x)
+        tableOfChromosomsMutation = evolution.initial_population(sum_minimize_f_x, tableOfChromosoms)
+        #print(tableOfChromosomsMutation)
 
-#Populacja początkowa (sum_minimize_f_x)
-tableOfChromosomsMutation = evolution.initial_population(sum_minimize_f_x, tableOfChromosoms)
+        best_solution_cost, best_solution_chromosom = evolution.mutation(tableOfChromosomsMutation)
 
-print(tableOfChromosomsMutation)
+        #print(best_solution_cost)
+        nowe_najmniejsze_rozwiązanie = min(best_solution_cost)
+        #print(nowe_najmniejsze_rozwiązanie)
+        #print(best_solution_chromosom)
 
-best_solution_cost, best_solution_chromosom = evolution.mutation(tableOfChromosomsMutation, D, E, P, links)
+        end = time.time()
 
-print(best_solution_cost)
-print(best_solution_chromosom)
+
+    index_of_best_solution = best_solution_cost.index(nowe_najmniejsze_rozwiązanie)
+    best_solution = best_solution_chromosom[index_of_best_solution]
+    x.append(best_solution)
+
+    print("Znaleziono rozwiązanie najbardziej optymalne dla dużego zbioru.")
+    print("Rozwiązanie (chromosom): ", best_solution)
+    print("Koszt rozwiązania: ",minimize_function(data.E, x, data.P, data.links, data.D))
+    print("Suma kosztów rozwiązania: ", nowe_najmniejsze_rozwiązanie)
+
+    theFile= open("optymalny_wynik.txt", 'w')
+    theFile.write("Rozwiazanie (chromosom): " )
+    theFile.write("%s\n" % str(best_solution))
+    theFile.write("Koszt rozwiazania: " )
+    theFile.write("%s\n" % str(minimize_function(data.E, x, data.P, data.links, data.D)))
+    theFile.write("Suma kosztow rozwiazania: " )
+    theFile.write("%s\n" % str(nowe_najmniejsze_rozwiązanie))
+

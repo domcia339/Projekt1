@@ -3,6 +3,8 @@ import math
 import time
 import random
 
+
+
 #total: do tylu się sumuje, n: na tyle liczb ma się składać
 def lista_mozliwych_genow( n, total):
     allPossibleGene = [x for x in range(0, int(total)+1)]
@@ -43,7 +45,7 @@ def generate_possible_chromosoms_BIG(D, numberOfPossibleGens ):
 
     chromosoms=[]
 
-    for i in range(1000):
+    for i in range(3000):
         random_chromosom = []
         for j in range(D):
             random_chromosom.append(random.randint(0, numberOfPossibleGens[j]-1))
