@@ -45,3 +45,4 @@ class Data:
                 ##P['P('+str(i+1)+','+str(j+1)+')'] = x[1:]
                 a.append(x[1:])
             self.P.append(a)
+

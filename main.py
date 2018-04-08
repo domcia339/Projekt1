@@ -2,65 +2,101 @@ from DAP_problem import*
 from Evolution import *
 from Data import *
 
-data = Data()
 
-#Generacja możliwych genów na podstawie funkcji z pliku DAP_problem.py
-possibleGens = generate_list_of_gens_for_all_demands(data.D, data.m_d, data.h_d)
+class MainClass:
+    def __init__(self):
+        self.sum_minimize_f_x = []
 
-numberOfPossibleGens = []
-for i in range(data.D):
-    numberOfPossibleGens.append(len(possibleGens[i]))
+        # Odwołanie do klasy Data
+        data = Data()
+        dap = DAP()
 
-#generacja możliwości ułożenia genów w chromosomie
-tableOfChromosoms= generate_list_of_possible_chromosoms(data.D, numberOfPossibleGens, possibleGens)
+        #Generacja możliwych genów na podstawie funkcji z pliku DAP_problem.py
+        possibleGens = dap.generate_list_of_gens_for_all_demands(data.D, data.m_d, data.h_d)
 
-#liczenie wartości funkcji f(x)
-minimize_f_x = minimize_function(data.E, tableOfChromosoms, data.P, data.links, data.D)
+        numberOfPossibleGens = []
+        for i in range(data.D):
+            numberOfPossibleGens.append(len(possibleGens[i]))
 
-#sumuje wartości, żeby znależć najlepsze rozwiązanie
-sum_minimize_f_x =suma_elementow_listy(minimize_f_x)
-najmniejsze_rozwiązanie_z_populacji = min(sum_minimize_f_x)
-print(najmniejsze_rozwiązanie_z_populacji)
+        #generacja możliwości ułożenia genów w chromosomie
+        tableOfChromosoms= dap.generate_list_of_possible_chromosoms(data.D, numberOfPossibleGens, possibleGens)
 
-if najmniejsze_rozwiązanie_z_populacji == 0:
-    print("Znaleziono rozwiąznie optymalne, dla zbioru małego z wykorzystaniem metody Brute Force:")
-    print(tableOfChromosoms[sum_minimize_f_x.index(min(sum_minimize_f_x))])
-else:
-    nowe_najmniejsze_rozwiązanie = 1000
+        #liczenie wartości funkcji f(x)
+        minimize_f_x = dap.minimize_function(tableOfChromosoms)
 
-    while najmniejsze_rozwiązanie_z_populacji < nowe_najmniejsze_rozwiązanie:
-        #Mutacja
-        x = []
-        evolution = Evolution()
+        #sumuje wartości, żeby znależć najlepsze rozwiązanie
+        self.sum_minimize_f_x =dap.suma_elementow_listy(minimize_f_x)
 
-        #Populacja początkowa (sum_minimize_f_x)
-        tableOfChromosomsMutation = evolution.initial_population(sum_minimize_f_x, tableOfChromosoms)
-        #print(tableOfChromosomsMutation)
+        najmniejsze_rozwiazanie_z_populacji = min(self.sum_minimize_f_x)
+        print("najmniejsze rozwiązanie populacji:", najmniejsze_rozwiazanie_z_populacji)
 
-        best_solution_cost, best_solution_chromosom = evolution.mutation(tableOfChromosomsMutation)
+        #print(najmniejsze_rozwiązanie_z_populacji)
 
-        #print(best_solution_cost)
-        nowe_najmniejsze_rozwiązanie = min(best_solution_cost)
-        #print(nowe_najmniejsze_rozwiązanie)
-        #print(best_solution_chromosom)
+        theFile= open("optymalny_wynik.txt", 'w')
 
-        end = time.time()
+        #Szukanie najlepszego rozwiązania algorytm ewolucyjny
+        if najmniejsze_rozwiazanie_z_populacji == 0:
+            print("Znaleziono rozwiąznie optymalne, dla zbioru małego z wykorzystaniem metody Brute Force:")
+            theFile.write("Znaleziono rozwiąznie optymalne, dla zbioru małego z wykorzystaniem metody Brute Force:")
+            print(tableOfChromosoms[self.sum_minimize_f_x.index(min(self.sum_minimize_f_x))])
+            theFile.write(str(tableOfChromosoms[self.sum_minimize_f_x.index(min(self.sum_minimize_f_x))]))
+        else:
+
+            nowe_najmniejsze_rozwiazanie = 1000
+            count = 0
+            evolution = Evolution()
+            start= time.time()
+            #Populacja początkowa (sum_minimize_f_x)
+            rozwiazaniaWKolejnychGeneracjach = []
+            best_solution_chromosom = []
+            best_solution_cost = []
+            x = []
+
+            tableOfChromosomsMutation = evolution.initial_population(self.sum_minimize_f_x, tableOfChromosoms)
+
+            while 0 < nowe_najmniejsze_rozwiazanie:
+                #Mutacja
+                if count == 0:
+                    best_solution_cost, best_solution_chromosom = evolution.mutation(tableOfChromosomsMutation)
+
+                if count > 0:
+                    tableOfChromosomsMutation = evolution.initial_population(best_solution_cost, best_solution_chromosom)
+                    #print(dap.suma_elementow_listy(dap.minimize_function(tableOfChromosomsMutation)))
+                    #print("1: ", best_solution_cost)
+                    best_solution_cost, best_solution_chromosom = evolution.mutation(tableOfChromosomsMutation)
+                    #print("2: ", best_solution_cost)
 
 
-    index_of_best_solution = best_solution_cost.index(nowe_najmniejsze_rozwiązanie)
-    best_solution = best_solution_chromosom[index_of_best_solution]
-    x.append(best_solution)
+                #print(best_solution_cost)
 
-    print("Znaleziono rozwiązanie najbardziej optymalne dla dużego zbioru.")
-    print("Rozwiązanie (chromosom): ", best_solution)
-    print("Koszt rozwiązania: ",minimize_function(data.E, x, data.P, data.links, data.D))
-    print("Suma kosztów rozwiązania: ", nowe_najmniejsze_rozwiązanie)
+                nowe_najmniejsze_rozwiazanie = min(best_solution_cost)
+                rozwiazaniaWKolejnychGeneracjach.append(nowe_najmniejsze_rozwiazanie)
+                #print(nowe_najmniejsze_rozwiązanie)
+                #print(best_solution_chromosom)
+                count = count +1
+                #print(count)
 
-    theFile= open("optymalny_wynik.txt", 'w')
-    theFile.write("Rozwiazanie (chromosom): " )
-    theFile.write("%s\n" % str(best_solution))
-    theFile.write("Koszt rozwiazania: " )
-    theFile.write("%s\n" % str(minimize_function(data.E, x, data.P, data.links, data.D)))
-    theFile.write("Suma kosztow rozwiazania: " )
-    theFile.write("%s\n" % str(nowe_najmniejsze_rozwiązanie))
+            index_of_best_solution = best_solution_cost.index(nowe_najmniejsze_rozwiazanie)
+            best_solution = best_solution_chromosom[index_of_best_solution]
+            x.append(best_solution)
+            end = time.time()
+            print("Znaleziono rozwiązanie najbardziej optymalne dla dużego zbioru.")
+            print("Rozwiązanie (chromosom): ", best_solution)
+            print("Koszt rozwiązania: ",dap.minimize_function( x))
+            print("Suma kosztów rozwiązania: ", nowe_najmniejsze_rozwiazanie)
+            print("Sekwencja wartości najlepszych rozwiązań: ", rozwiazaniaWKolejnychGeneracjach)
+            print("Ilość iteracji: ",count)
+            print("Czas:", end - start)
 
+
+            theFile.write("Rozwiazanie (chromosom): " )
+            theFile.write("%s\n" % str(best_solution))
+            theFile.write("Koszt rozwiazania: " )
+            theFile.write("%s\n" % str(dap.minimize_function( x)))
+            theFile.write("Suma kosztow rozwiazania: " )
+            theFile.write("%s\n" % str(nowe_najmniejsze_rozwiazanie))
+            theFile.write("Liczba wykonanych iteracji algorytmu:")
+            theFile.write("%s\n" % str(count))
+
+
+main = MainClass()
